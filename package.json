@@ -11,9 +11,21 @@
     "start": "node --env-file-if-exists=.env backend/server.mjs",
     "dev": "node --watch --env-file-if-exists=.env backend/server.mjs",
     "admin:setup": "node --env-file-if-exists=.env backend/setup-admin.mjs",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "cloud:build": "node cloudflare/build.mjs",
+    "cloud:dev": "node cloudflare/cli.mjs dev --ip 0.0.0.0 --port 8787",
+    "cloud:check": "node cloudflare/deploy.mjs --dry-run",
+    "cloud:deploy": "node cloudflare/deploy.mjs",
+    "cloud:login": "node cloudflare/cli.mjs login",
+    "cloud:whoami": "node cloudflare/cli.mjs whoami",
+    "cloud:adminsetup": "node cloudflare/setup-admin.mjs"
   },
   "dependencies": {
     "express": "5.3.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "miniflare": "5.20261006.1-alpha",
+    "wrangler": "4.149.0"
   }
 }

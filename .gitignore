@@ -10,3 +10,7 @@ node_modules/
 .npm-cache/
 coverage/
 .DS_Store
+.cloudflare/
+.wrangler/
+.dev.vars
+.dev.vars.*

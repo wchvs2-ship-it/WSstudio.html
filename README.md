@@ -1,8 +1,23 @@
 # WSstudio
 
-Aplicação em português para apresentar serviços, registrar pedidos de orçamento e administrar a contratação com pagamento manual em duas etapas. A vitrine pode continuar no GitHub Pages; a API e o painel precisam de um servidor Node.js.
+Aplicação em português para apresentar serviços, registrar pedidos de orçamento e administrar a contratação com pagamento manual em duas etapas. A vitrine pode continuar no GitHub Pages. A implantação gratuita usa Cloudflare Workers com banco SQLite permanente em um Durable Object; o servidor Node também continua disponível para desenvolvimento.
 
-## Desenvolvimento
+## Hospedagem gratuita
+
+O passo a passo está em [docs/DEPLOY-GRATUITO.md](docs/DEPLOY-GRATUITO.md). O plano Workers Free fornece o endereço HTTPS da API e mantém os pedidos entre publicações, dentro das cotas gratuitas. A verificação de senha e os dados ficam no Durable Object privado.
+
+Para desenvolver essa versão, instale as dependências e execute:
+
+```sh
+npm ci --cache /workspace/.npm-cache --ignore-scripts
+npm run cloud:check
+npm run cloud:adminsetup -- --local
+npm run cloud:dev
+```
+
+O cadastro solicita uma senha com entrada oculta e guarda somente seu hash em `.dev.vars`, fora do Git. O Worker local usa a porta 8787 e armazenamento em `.wrangler`; esses dados não são copiados automaticamente para a nuvem. `npm run cloud:deploy` publica somente depois que a conta Cloudflare estiver autorizada. As credenciais e os dados de teste são separados da configuração pública da vitrine.
+
+## Desenvolvimento com Node
 
 Requer Node.js 24 ou superior. A versão do ambiente está em `.node-version`.
 
