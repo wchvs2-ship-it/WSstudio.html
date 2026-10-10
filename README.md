@@ -64,6 +64,6 @@ Os links de contato aparecem no rodapé. WhatsApp e e-mail também recebem o res
 
 ## Publicação no GitHub Pages
 
-O site é estático e pode ser publicado a partir da branch `main`, pasta `/ (root)`, em Settings → Pages → Deploy from a branch. O proprietário escolheu manter este repositório privado e publicar com um plano compatível do GitHub Pages. Preserve a visibilidade privada. A ativação inicial em Settings → Pages deve ser feita pelo proprietário quando a integração não tiver permissão para administrar Pages. O arquivo `.nojekyll` dispensa processamento por Jekyll. Não há build nem variáveis secretas necessárias para publicar.
+O site é estático e pode ser publicado a partir da branch `main`, pasta `/ (root)`, em Settings → Pages → Deploy from a branch. O proprietário autorizou usar o GitHub Pages gratuito, com este repositório público. A mudança para público e a ativação inicial do Pages devem ser feitas pelo proprietário em Settings quando a integração não tiver permissão para administrar essas configurações; essa autorização não prova que a mudança já foi aplicada. Depois de tornar o repositório público, selecione Deploy from a branch → main → / (root) → Save em Settings → Pages. O arquivo `.nojekyll` dispensa processamento por Jekyll. Não há build nem variáveis secretas necessárias para publicar.
 
 A publicação deve ser confirmada pelo status do GitHub Pages e por uma requisição ao endereço público, incluindo HTML, CSS e JavaScript. Salvar ou publicar a configuração do ambiente Codex é uma operação separada da publicação do site.
