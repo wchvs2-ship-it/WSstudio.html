@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101310">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Pedidos · WSstudio</title>
+  <link rel="stylesheet" href="admin.css">
+  <script src="admin.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Ir para o conteúdo</a>
+  <header class="site-header">
+    <a class="brand" href="/">ws<span>studio</span><span class="brand-marker" aria-hidden="true">✳</span></a>
+    <span class="header-label">PAINEL DE PEDIDOS</span>
+    <div id="session-tools" class="session-tools" hidden><span id="session-user"></span><button id="logout" class="button secondary" type="button">Sair</button></div>
+  </header>
+  <main id="main" class="main">
+    <p id="global-status" class="message" role="status">Verificando sua sessão…</p>
+    <section id="login-section" class="login-card" hidden aria-labelledby="login-title">
+      <p class="eyebrow">SEU ESTÚDIO, ORGANIZADO.</p>
+      <h1 id="login-title">Acompanhe cada<br><em>novo projeto.</em></h1>
+      <p class="muted">Entre para consultar pedidos, definir orçamentos e registrar os recebimentos.</p>
+      <form id="login-form">
+        <label for="username">Usuário<input id="username" name="username" value="william" autocomplete="username" required maxlength="64"></label>
+        <label for="password">Senha<input id="password" name="password" type="password" autocomplete="current-password" required maxlength="256"></label>
+        <p id="login-error" class="message error" role="alert" hidden></p>
+        <button class="button" type="submit">Entrar no painel <span aria-hidden="true">↗</span></button>
+      </form>
+    </section>
+    <section id="orders-section" hidden aria-labelledby="orders-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">DA IDEIA À ENTREGA</p><h1 id="orders-title">Seus <em>pedidos.</em></h1><p class="muted">Confirme cada Pix no aplicativo do banco antes de registrar o recebimento.</p></div>
+        <button id="refresh" class="button secondary" type="button">Atualizar pedidos ↻</button>
+      </div>
+      <p id="orders-status" class="message" role="status"></p>
+      <div id="empty-state" class="empty-state" hidden><span aria-hidden="true">↗</span><h2>A próxima ideia começa aqui.</h2><p>Os pedidos enviados pelo site aparecerão neste painel.</p></div>
+      <div id="orders-table-wrap" class="table-wrap" hidden tabindex="0" role="region" aria-label="Lista de pedidos. Em telas pequenas, deslize horizontalmente para ver todas as colunas.">
+        <table><caption class="sr-only">Pedidos recebidos pelo WSstudio</caption><thead><tr><th scope="col">Cliente / pedido</th><th scope="col">Serviço</th><th scope="col">Criado em</th><th scope="col">Situação</th><th scope="col">Valor final</th><th scope="col"><span class="sr-only">Ações</span></th></tr></thead><tbody id="orders-body"></tbody></table>
+      </div>
+      <p id="table-hint" class="table-hint" hidden>Deslize a lista para os lados para ver os detalhes e abrir um pedido.</p>
+      <nav id="pagination" class="pagination" aria-label="Páginas de pedidos" hidden><button id="previous-page" class="button secondary" type="button">← Anterior</button><span id="page-label"></span><button id="next-page" class="button secondary" type="button">Próxima →</button></nav>
+    </section>
+  </main>
+  <dialog id="order-dialog" aria-labelledby="detail-title">
+    <div class="dialog-heading"><div><p class="eyebrow">DETALHES DO PEDIDO</p><h2 id="detail-title"></h2></div><button class="icon-button" id="close-detail" type="button" aria-label="Fechar detalhes">×</button></div>
+    <p id="detail-status" class="message" role="status"></p>
+    <dl id="detail-fields" class="details-grid"></dl>
+    <section class="detail-section" aria-labelledby="payment-title"><h3 id="payment-title">Pagamento em duas etapas</h3><p id="payment-summary" class="muted"></p><div id="payment-cards" class="payment-cards"></div></section>
+    <section id="quote-section" class="detail-section" aria-labelledby="quote-title" hidden>
+      <h3 id="quote-title">Definir orçamento final</h3>
+      <p class="muted">Confirme o escopo com o cliente antes de registrar o valor. A manutenção mensal é cobrada separadamente.</p>
+      <form id="quote-form"><label for="quote-amount">Valor total do serviço (R$)<input id="quote-amount" name="amount" inputmode="decimal" placeholder="490,90" maxlength="12" required aria-describedby="amount-hint"></label><p id="amount-hint" class="input-hint">Use vírgula ou ponto para os centavos, sem separador de milhares. De R$ 0,02 a R$ 1.000.000,00.</p><p id="quote-preview" class="quote-preview" aria-live="polite"></p><label for="quote-notes">Condições e observações<textarea id="quote-notes" name="notes" rows="3" maxlength="2000" placeholder="Escopo acordado, promoção de tráfego e condições do projeto."></textarea></label><button class="button" type="submit">Salvar orçamento ↗</button></form>
+    </section>
+    <section id="action-section" class="detail-section" aria-labelledby="action-title" hidden><h3 id="action-title">Próximo passo</h3><div id="order-actions" class="order-actions"></div></section>
+    <section class="detail-section" aria-labelledby="history-title"><h3 id="history-title">Histórico</h3><ol id="order-history" class="history"></ol></section>
+  </dialog>
+  <dialog id="confirm-dialog" class="confirm-dialog" aria-labelledby="confirm-title">
+    <div class="dialog-heading"><h2 id="confirm-title"></h2><button id="close-confirm" class="icon-button" type="button" aria-label="Fechar confirmação">×</button></div>
+    <p id="confirm-description" class="muted"></p>
+    <form id="confirm-form"><div id="bank-confirmation" hidden><label for="payment-reference">Referência do recebimento<input id="payment-reference" name="reference" maxlength="120" placeholder="Identificador da transação ou referência do banco"></label><p class="input-hint">Use uma referência que permita localizar o recebimento no banco.</p><label class="check-label"><input id="bank-checked" name="checked" type="checkbox"><span>Conferi o recebimento no aplicativo do banco e confirmei o valor indicado acima.</span></label></div><label for="action-notes">Observação (opcional)<textarea id="action-notes" name="notes" rows="2" maxlength="2000"></textarea></label><p id="confirm-error" class="message error" role="alert" hidden></p><div class="dialog-buttons"><button id="cancel-confirm" class="button secondary" type="button">Voltar</button><button id="confirm-submit" class="button" type="submit">Confirmar</button></div></form>
+  </dialog>
+  <noscript><p class="message">Ative o JavaScript para acessar o painel.</p></noscript>
+</body>
+</html>

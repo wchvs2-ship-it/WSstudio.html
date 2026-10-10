@@ -1,0 +1,19 @@
+{
+  "name": "wsstudio",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "WSstudio: vitrine, pedidos e administração com Pix manual",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "node --env-file-if-exists=.env backend/server.mjs",
+    "dev": "node --watch --env-file-if-exists=.env backend/server.mjs",
+    "admin:setup": "node --env-file-if-exists=.env backend/setup-admin.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "express": "5.3.0"
+  }
+}

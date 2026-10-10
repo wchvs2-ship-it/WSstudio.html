@@ -33,3 +33,5 @@ select{font:inherit;outline-offset:5px;width:100%;border:1px solid #48543c;backg
 .service .service-payment{color:var(--lime);font-size:12px;margin:0 0 24px}
 
 .pix-instructions{border:1px solid #485a35;border-radius:7px;padding:20px;margin:22px 0;background:#151c10}.pix-instructions .eyebrow{color:var(--lime)}.pix-instructions .pix-holder{color:var(--paper)}.pix-key-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}.pix-key-row input{flex:1 1 180px;min-width:0}.pix-key-row .button{font-size:12px;min-height:44px}.pix-instructions [role="status"]{color:var(--lime);font-size:12px}.pix-instructions[hidden]{display:none}
+
+.order-feedback:empty,.order-reference:empty{display:none}.order-feedback{font-size:13px;line-height:1.7;color:var(--lime)}.order-reference{overflow-wrap:anywhere;color:var(--lime)}button:disabled{cursor:wait;opacity:.65}

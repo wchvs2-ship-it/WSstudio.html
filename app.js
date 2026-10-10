@@ -1,40 +1,19 @@
 'use strict';
-const studioContact={whatsapp:'5586994911357',email:'wcstudio.sites@gmail.com'};
-const pixDetails = { type: 'Celular', key: '+5586981579130', holder: 'William Carvalho do Nascimento' };
+import { studioContact, pixDetails, serviceCatalog, servicePrice, installmentPrice,
+  paymentSchedule, includedServices, trafficTerms } from './catalog.js';
 document.getElementById('pix-key').value = pixDetails.key;
 document.getElementById('pix-holder').textContent = pixDetails.holder;
-const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
-const serviceCatalog = [
-  { id: 'landing', name: 'Landing page comum', min: 49090, max: 59090,
-    category: '01 / PRESENÇA', description: 'Uma página para apresentar sua oferta e facilitar o primeiro contato.' },
-  { id: 'institucional', name: 'Site institucional', min: 59090, max: 79090,
-    category: '02 / IDENTIDADE DIGITAL', description: 'Um espaço para contar sua história e apresentar os serviços do seu negócio.', featured: true },
-  { id: 'blog', name: 'Blog', min: 34090, max: 34090,
-    category: '03 / CONTEÚDO', description: 'Compartilhe ideias e conteúdos para aproximar sua marca do seu público.' },
-  { id: 'cardapio', name: 'Cardápio', min: 19090, max: 19090,
-    category: '04 / GASTRONOMIA', description: 'Apresente os produtos e sabores do seu negócio em um cardápio digital.' },
-  { id: 'loja', name: 'Loja virtual', min: 49090, max: 69090,
-    category: '05 / VENDAS', description: 'Leve seus produtos para o digital com uma loja pensada para o seu negócio.' }
-];
-function servicePrice(service) {
-  const min = currency.format(service.min / 100);
-  return service.min === service.max ? min : `${min} a ${currency.format(service.max / 100)}`;
+const apiConfig = window.WS_API_CONFIG || { enabled: false, baseUrl: '' };
+const apiEnabled = apiConfig.enabled === true;
+const apiBase = String(apiConfig.baseUrl || '').replace(/\/+$/, '');
+const formFeedback = document.getElementById('order-feedback');
+const submitButton = document.querySelector('#order-form [type="submit"]');
+if (apiEnabled) {
+  submitButton.textContent = 'Enviar solicitação ↗';
+  document.getElementById('order-intro').textContent = 'Envie seus dados ao estúdio para receber uma proposta. O pagamento será combinado após a confirmação do orçamento.';
 }
-function splitPayment(cents) {
-  const deposit = Math.round(cents / 2);
-  return { deposit, balance: cents - deposit };
-}
-function installmentPrice(service, part) {
-  return servicePrice({
-    min: splitPayment(service.min)[part],
-    max: splitPayment(service.max)[part]
-  });
-}
-function paymentSchedule(service) {
-  return `50% na contratação: ${installmentPrice(service, 'deposit')}. 50% na entrega: ${installmentPrice(service, 'balance')}. Valores estimados, confirmados na proposta.`;
-}
-const includedServices = 'Domínio e hospedagem por 1 ano e uma semana de gestão de tráfego.';
-const trafficTerms = 'Tráfego pago incluído conforme a promoção e a faixa de valor contratada. Fora da promoção, é um serviço adicional sob orçamento.';
+let requestAttempt = null;
+
 const catalogElement = document.getElementById('service-catalog');
 for (const service of serviceCatalog) {
   const card = document.createElement('article');
@@ -54,11 +33,18 @@ const orderDialog = document.getElementById('order-dialog');
 const form = document.getElementById('order-form');
 let selectedService = null;
 let summary = '';
+let formRevision = 0;
 
 document.querySelectorAll('[data-service]').forEach(button => {
   button.addEventListener('click', () => {
+    formRevision += 1;
     selectedService = serviceCatalog.find(service => service.id === button.dataset.service);
     form.reset();
+    submitButton.disabled = false;
+    form.removeAttribute('aria-busy');
+    requestAttempt = null;
+    formFeedback.textContent = '';
+    document.getElementById('order-reference').textContent = '';
     document.getElementById('selected-service').value = selectedService.name;
     const details = document.getElementById('selected-service-details');
     details.textContent = `${servicePrice(selectedService)} · Entrega em média de 4 dias. ${includedServices} ${trafficTerms} ${paymentSchedule(selectedService)}`;
@@ -72,10 +58,62 @@ document.querySelectorAll('[data-service]').forEach(button => {
   });
 });
 
-form.addEventListener('submit', event => {
+form.addEventListener('submit', async event => {
   event.preventDefault();
   if (!selectedService) return;
+  const submittedService = selectedService;
+  const submittedRevision = formRevision;
+  const currentForm = () => submittedRevision === formRevision && orderDialog.open;
   const data = new FormData(form);
+  let registeredOrder = null;
+  let proposalService = submittedService;
+  formFeedback.textContent = '';
+  if (apiEnabled) {
+    const payload = JSON.stringify({
+      serviceId: submittedService.id,
+      name: String(data.get('name')).trim(),
+      email: String(data.get('email')).trim(),
+      business: String(data.get('business')).trim(),
+      goal: String(data.get('goal')).trim(),
+      paymentMethod: data.get('payment'),
+      maintenanceRequested: data.has('maintenance')
+    });
+    if (!requestAttempt || requestAttempt.payload !== payload) {
+      requestAttempt = { payload, key: crypto.randomUUID() };
+    }
+    submitButton.disabled = true;
+    form.setAttribute('aria-busy', 'true');
+    formFeedback.textContent = 'Registrando sua solicitação…';
+    try {
+      const response = await fetch(`${apiBase}/api/orders`, {
+        method: 'POST', credentials: 'omit', cache: 'no-store',
+        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': requestAttempt.key },
+        body: requestAttempt.payload, signal: AbortSignal.timeout(15000)
+      });
+      const result = await response.json();
+      if (!currentForm()) return;
+      if (!response.ok) throw new Error(typeof result.error === 'string' ? result.error : 'Não foi possível registrar sua solicitação. Tente novamente.');
+      if (typeof result.id !== 'string' || !result.estimated
+        || !Number.isSafeInteger(result.estimated.minCents) || !Number.isSafeInteger(result.estimated.maxCents)) {
+        throw new Error('Não foi possível confirmar o registro. Tente novamente.');
+      }
+      registeredOrder = result;
+      proposalService = { ...submittedService, min: result.estimated.minCents, max: result.estimated.maxCents };
+      formFeedback.textContent = '';
+    } catch (error) {
+      if (!currentForm()) return;
+      formFeedback.textContent = error.name === 'TimeoutError' || error instanceof TypeError
+        ? 'Não foi possível confirmar o registro. Verifique sua conexão e tente novamente.'
+        : error.message;
+      return;
+    } finally {
+      if (submittedRevision === formRevision) {
+        submitButton.disabled = false;
+        form.removeAttribute('aria-busy');
+      }
+    }
+  }
+  if (!currentForm()) return;
   const isPix = data.get('payment') === 'Pix';
   const pixSummary = isPix
     ? `\nPix manual — chave ${pixDetails.type.toLowerCase()}: ${pixDetails.key}\nBeneficiário: ${pixDetails.holder}\nAguarde a confirmação do orçamento antes de transferir. O recebimento será confirmado pelo estúdio.`
@@ -86,14 +124,14 @@ form.addEventListener('submit', event => {
     : 'Não solicitada neste pedido.';
   summary = `SOLICITAÇÃO DE PROPOSTA — WSstudio
 
-Serviço: ${selectedService.name}
-${selectedService.min === selectedService.max ? 'Valor do serviço' : 'Faixa inicial'}: ${servicePrice(selectedService)}
+Serviço: ${proposalService.name}
+${proposalService.min === proposalService.max ? 'Valor do serviço' : 'Faixa inicial'}: ${servicePrice(proposalService)}
 Inclusos: ${includedServices}
 Tráfego pago: ${trafficTerms}
 Entrega: em média, 4 dias.
 Condição de pagamento: 50% na contratação e 50% na entrega.
-Entrada estimada (50%): ${installmentPrice(selectedService, 'deposit')}
-Quitação estimada na entrega (50%): ${installmentPrice(selectedService, 'balance')}
+Entrada estimada (50%): ${installmentPrice(proposalService, 'deposit')}
+Quitação estimada na entrega (50%): ${installmentPrice(proposalService, 'balance')}
 Manutenção mensal tratada separadamente do valor do serviço.
 Preferência de pagamento: ${data.get('payment')}${pixSummary}
 Manutenção mensal: ${maintenance}
@@ -107,6 +145,9 @@ ${data.get('goal')}
 
 Valor final, escopo, prazo, condições da promoção e custos adicionais serão confirmados na proposta.
 Esta solicitação não confirma uma compra ou pagamento.`;
+  document.getElementById('order-reference').textContent = registeredOrder ? `Número do pedido: ${registeredOrder.id}` : '';
+  document.getElementById('order-result-title').textContent = registeredOrder ? 'Sua solicitação foi registrada.' : 'Sua solicitação está pronta.';
+  if (registeredOrder) summary = `Número do pedido: ${registeredOrder.id}\n\n${summary}`;
   document.getElementById('order-summary').textContent = summary;
   document.getElementById('send-whatsapp').href = `https://wa.me/${studioContact.whatsapp}?text=${encodeURIComponent(summary)}`;
   document.getElementById('send-email').href = `mailto:${studioContact.email}?subject=${encodeURIComponent('Solicitação de proposta — WSstudio')}&body=${encodeURIComponent(summary)}`;
